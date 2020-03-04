@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+    database:
+        build: ./database
+        restart: always
+        volumes:
+            - db-volume:/var/lib/postgres
+
+volumes:
+    db-volume:
