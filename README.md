@@ -43,5 +43,5 @@ Grafana va fi folosita pentru crearea unui serviciu de monitorizare.
 
 ## Link-uri proiect:
 
-Github: [TODO](example.com)
-Dockerhub: [TODO](example.com)
+ - Github: [https://github.com/LOLsun/proiect-idp](https://github.com/LOLsun/proiect-idp)
+ - Dockerhub: [https://hub.docker.com/repository/docker/lolsun/idp](https://hub.docker.com/repository/docker/lolsun/idp)
