@@ -4,7 +4,7 @@
 
 ## Idee proiect
 
-Voi implementa o clona de [notion](notion.so). Aceasta este o aplicatie
+Voi implementa o clona de [notion](http://www.notion.so). Aceasta este o aplicatie
 de _all-in-one workspace_, permitand unui utilizator sa scrie text, sa-si
 ia notite, sa-si creeze liste de TO-DO, calendare, remindere etc.
 
