@@ -4,7 +4,7 @@
 
 Content block types:
 
- - [x] Text
+ - [x] Paragraph
  - [x] Page
  - [x] TODO block
  - [x] Heading level 1
@@ -41,7 +41,7 @@ Each block will have the following:
  - order
  - block_type
 
-### Text
+### Paragraph
 
  - content -- a markdown string
 
@@ -86,6 +86,8 @@ Each block will have the following:
  - type (hint, warning, note etc.)
 
 ### Link
+
+Use guteurls.de
 
  - url
 

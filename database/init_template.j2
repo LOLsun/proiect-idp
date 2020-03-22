@@ -1,0 +1,74 @@
+{# create the children tables #}
+{% for block in blocks %}
+create table {{ block.table_name }} (
+    {% for col in block.columns -%}
+    {{ col.name }} {{ col.type }} not null {%- if not loop.last %}, {% endif %}
+    {% endfor %}
+) inherits (blocks_parent);
+{% endfor -%}
+
+
+{% macro json_build_object(cols) -%}
+    json_build_object(
+        {%- for col in cols -%}
+            '{{ col.name }}', {{ col.name }} {%- if not loop.last %}, {% endif %}
+        {%- endfor -%}
+    )
+{%- endmacro %}
+
+
+{%- macro view_select(block, block_type) -%}
+select id,
+       {{ block_type }} block_type,
+       order_in_page,
+       {{ json_build_object(block.columns) }} attrs
+from {{ block.table_name }}
+{%- endmacro -%}
+
+
+{# create the aggregating view #}
+create view blocks as
+{% for block in blocks -%}
+    {{ view_select(block, loop.index) }}
+{% if not loop.last -%} UNION ALL {% endif %}
+{% endfor -%};
+
+
+{# TODO add insert function #}
+{% macro insert_blocklet(block, index) -%}
+    if block_type = {{ index }} then
+        insert into {{ block.table_name }} (order_in_page, {{ block.columns | join(', ', attribute='name') }})
+               values (order_in_page,
+                       {% for col in block.columns -%}
+                        (attrs->>'{{ col.name }}')::{{ col.type }} {%- if not loop.last %}, {% endif %}
+                       {%- endfor %})
+        returning id into new_id;
+    end if;
+{% endmacro %}
+
+
+CREATE OR REPLACE FUNCTION insert_block(
+    block_type integer,
+    order_in_page integer,
+    attrs json
+) RETURNS blocks AS
+$$
+DECLARE
+    ret blocks;
+    new_id integer;
+BEGIN
+    {% for block in blocks -%}
+    {{ insert_blocklet(block, loop.index) }}
+    {% endfor -%}
+
+
+    select *
+    into ret
+    from blocks
+    where id=new_id;
+
+    return ret;
+END
+$$ LANGUAGE plpgsql;
+
+{# TODO add update function #}
