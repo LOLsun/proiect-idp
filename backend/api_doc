@@ -4,7 +4,6 @@ GET /blocks
 GET /blocks/<int:block_id>
     - returns the block with id `block_id`
 
-TODO implement
 POST /blocks
     - expects an object with the following shape
        {
@@ -26,10 +25,6 @@ POST /blocks
     - in case of success, the `order_in_page` attribute of any element
        may have changed; this should pose no problems. to refresh the
        ordering, see `GET /order/<list:block_ids>`
-    - to implement:
-      - [x] add_block_at_end
-      - [x] add_block_before
-      - [x] add_block_after
 
 TODO implement
 PUT /blocks/<int:block_id>

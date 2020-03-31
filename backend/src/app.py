@@ -1,52 +1,44 @@
 from flask import Flask
-from psycopg2 import connect
+from flask import request
 from json import dumps
+from sys import stderr
+import db_service
 
 app = Flask(__name__)
 
-def get_db_conn():
-    if not hasattr(get_db_conn, 'db_conn'):
-        # TODO get from env
-        get_db_conn.db_conn = connect(user="postgres",
-                                      password="",
-                                      host="database",
-                                      port="5432")
-
-    return get_db_conn.db_conn
 
 
 @app.route('/blocks', methods=['GET'])
 def all_blocks():
-    conn = get_db_conn()
-    with conn.cursor() as cur:
-        cur.callproc('get_all_blocks');
-        result = cur.fetchall()
-        result = result[0][0]  # first row, first column represents the json result
-    conn.commit()
-    return dumps(result)
+    return dumps(db_service.get_all_blocks())
 
 
 @app.route('/blocks', methods=['POST'])
 def new_block():
-    conn = get_db_conn()
-    with conn.cursor() as cur:
-        cur.callproc('add_block_at_end', (1, dumps({'content': 'continutul meu'})));
-        result = cur.fetchall()
-        result = result[0][0]  # first row, first column represents the json result
-    conn.commit()
-    return dumps(result)
+    post_data = request.get_json()
+    before = post_data.get('add_before')
+    after = post_data.get('add_after')
 
+    if before is not None and after is not None:
+        return {'error': 'body can only contain "add_before" _or_ "add_after"'}, 400
+
+    try:
+        block_type = post_data['block']['block_type']
+        block_attrs = dumps(post_data['block']['attrs'])
+    except IndexError:
+        return {'error': 'bad block format'}, 400
+
+    if before is not None:
+        return db_service.add_block_before(before, block_type, block_attrs), 201
+
+    if after is not None:
+        return db_service.add_block_after(after, block_type, block_attrs), 201
+
+    return db_service.add_block_at_end(block_type, block_attrs), 201
 
 @app.route('/blocks/<int:block_id>', methods=['GET'])
 def get_block(block_id):
-    conn = get_db_conn()
-    with conn.cursor() as cur:
-        cur.callproc('get_block', (block_id,));
-        result = cur.fetchall()
-        if result:
-            result = result[0][0]  # first row, first column represents the json result
-    conn.commit()
-    return dumps(result)
+    return dumps(db_service.get_block_by_id(block_id))
 
 
 if __name__ == '__main__':
