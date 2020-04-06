@@ -1,122 +1,134 @@
 create table blocks_parent (
     id serial not null,
+    parent integer,  -- proper fk
     order_in_page integer
+    -- TODO see if serial creates a pk as well
 );
-/*
+
 
 create table paragraphs (
     content varchar not null
+
 ) inherits (blocks_parent);
 
 create table todos (
     content varchar not null,
     done boolean not null
+
 ) inherits (blocks_parent);
 
-
-insert into paragraphs ( 1000, 'ana are **mere**.');
-insert into paragraphs ( 2000, 'mere are _ana_.');
-
-insert into todos ( 3000, 'pay the bills', FALSE);
-insert into todos ( 4000, 'write some code', TRUE);
-
-
-create view blocks as
-select id, 0 block_type,  order_in_page, json_build_object('content', content) attrs
-from paragraphs
-union all
-select id, 1 block_type,  order_in_page, json_build_object('content', content, 'done', done) attrs
-from todos;
-
-
-
-CREATE OR REPLACE FUNCTION insert_blocks_view() RETURNS TRIGGER AS
-$$
-BEGIN
-    if NEW.block_type = 1 then
-        insert into todos (order_in_page, content, done)
-               values (NEW.order_in_page,
-                       (NEW.attrs->>'content')::varchar,
-                       (NEW.attrs->>'done')::boolean)
-        returning id into NEW.id;
-    else
-        insert into paragraphs (order_in_page, content)
-               values (NEW.order_in_page,
-                       (NEW.attrs->>'content')::varchar)
-        returning id into NEW.id;
-    end if;
-
-    return NEW;
-END
-$$ LANGUAGE plpgsql;
-
-
-CREATE TRIGGER insert_blocks_trigger
-INSTEAD OF INSERT ON blocks
-FOR EACH ROW EXECUTE PROCEDURE insert_blocks_view();
-
-
-
-insert into blocks (block_type, order_in_page, attrs) values (1, 500, '{"content": "fa ciorba", "done": false}'::json);
-
-*/
-
-
-
-
-create table paragraphs (
-    content varchar not null
-    
-) inherits (blocks_parent);
-
-create table todos (
-    content varchar not null, 
-    done boolean not null
-    
-) inherits (blocks_parent);
-
-create view blocks as
+create view blocks_attrs as
 select id,
        1 block_type,
+       parent,
        order_in_page,
        json_build_object('content', content) attrs
 from paragraphs
-UNION ALL 
+UNION ALL
 select id,
        2 block_type,
+       parent,
        order_in_page,
        json_build_object('content', content, 'done', done) attrs
-from todos
+from todos;
 
-;
+
+create view blocks_levels as
+with recursive bl as (
+    select b.id, b.parent, 1 l
+    from blocks_parent b
+    where parent is NULL
+    union
+    select b.id, b.parent, l + 1 l
+    from blocks_parent b,
+         bl
+    where b.parent=bl.id
+)
+select *
+from bl;
+
+
+
+
+
+create or replace function get_json_for_blocks(d integer)  -- d == depth
+returns table (id integer, parent integer, block_json json) as
+$$
+BEGIN
+    if d >= (select max(l) from blocks_levels) then
+        return query (
+            select bl.id,
+                   bl.parent,
+                   json_build_object('order', ba.order_in_page,
+                                     'parent', ba.parent,
+                                     'attrs', ba.attrs,
+                                     'id', ba.id,
+                                     'type', ba.block_type) block_json
+            from blocks_levels bl,
+                 blocks_attrs ba
+            where bl.id=ba.id
+              and bl.l=(select max(l) from blocks_levels)
+        );
+    else
+        return query (
+            select ba.id,
+                   ba.parent,
+                   json_strip_nulls(json_build_object(
+                       'order', ba.order_in_page,
+                       'parent', ba.parent,
+                       'attrs', ba.attrs,
+                       'id', ba.id,
+                       'type', ba.block_type,
+                       'children', children_jsons.children_json
+                   ))
+            from (select bl.id,
+                         json_agg(c.block_json order by (c.block_json->>'order')::integer)
+                           filter (where c.block_json is not null) children_json
+                  from blocks_levels bl
+                       left outer join
+                       get_json_for_blocks(d+1) c
+                       on bl.id=c.parent
+                  where bl.l=d
+                  group by bl.id) children_jsons
+                 join
+                 blocks_attrs ba
+                 on ba.id=children_jsons.id
+        );
+    end if;
+END
+$$ language plpgsql;
+
 
 CREATE OR REPLACE FUNCTION insert_block(
     block_type integer,
+    parent integer,
     order_in_page integer,
     attrs json
-) RETURNS blocks AS
+) RETURNS blocks_attrs AS
 $$
 DECLARE
-    ret blocks;
+    ret blocks_attrs;
     new_id integer;
 BEGIN
     if block_type = 1 then
-        insert into paragraphs (order_in_page, content)
-               values (order_in_page,
+        insert into paragraphs (parent, order_in_page, content)
+               values (parent, order_in_page,
                        (attrs->>'content')::varchar)
         returning id into new_id;
     end if;
 
     if block_type = 2 then
-        insert into todos (order_in_page, content, done)
-               values (order_in_page,
+        insert into todos (parent, order_in_page, content, done)
+               values (parent, order_in_page,
                        (attrs->>'content')::varchar, (attrs->>'done')::boolean)
         returning id into new_id;
     end if;
 
+    -- TODO see if return query works here
+    -- TODO rename ret to to_ret
     select *
     into ret
-    from blocks
+    from blocks_attrs
     where id=new_id;
 
     return ret;
@@ -124,6 +136,36 @@ END
 $$ LANGUAGE plpgsql;
 
 
+create or replace function delete_block(block_id integer) returns void as
+$$
+DECLARE
+    i record;
+BEGIN
+    for i in
+        select id
+        from blocks_parent
+        where parent=block_id
+    loop
+        perform delete_block(i.id);
+    end loop;
+
+    delete from blocks_parent
+    where id=block_id;
+END
+$$ language plpgsql;
 
 
-
+create or replace function delete_children(block_id integer) returns void as
+$$
+DECLARE
+    i record;
+BEGIN
+    for i in
+        select id
+        from blocks_parent
+        where parent=block_id
+    loop
+        perform delete_block(i.id);
+    end loop;
+END
+$$ language plpgsql;

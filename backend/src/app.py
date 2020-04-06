@@ -34,11 +34,23 @@ def new_block():
     if after is not None:
         return db_service.add_block_after(after, block_type, block_attrs), 201
 
-    return db_service.add_block_at_end(block_type, block_attrs), 201
+    return db_service.add_block_at_end(block_type, post_data.get('parent'), block_attrs), 201
 
 @app.route('/blocks/<int:block_id>', methods=['GET'])
 def get_block(block_id):
     return dumps(db_service.get_block_by_id(block_id))
+
+
+@app.route('/blocks/<int:block_id>', methods=['DELETE'])
+def delete_block(block_id):
+    db_service.delete_block(block_id)
+    return {}, 204
+
+
+@app.route('/blocks/<int:block_id>/children', methods=['DELETE'])
+def delete_block_children(block_id):
+    db_service.delete_block_children(block_id)
+    return {}, 204
 
 
 if __name__ == '__main__':

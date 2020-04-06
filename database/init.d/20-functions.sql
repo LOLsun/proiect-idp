@@ -1,44 +1,42 @@
 create or replace function get_all_blocks() returns json as
 $$
-    select coalesce(json_agg(t), '[]'::json)
-    from (select *
-          from blocks
-          order by order_in_page) t;
+    select json_agg(block_json order by (block_json->>'order')::integer)
+    from get_json_for_blocks(1);
 $$ language sql;
 
 
 create or replace function get_block(block_id integer) returns json as
 $$
-select json_build_object('id', id,
-                         'block_type', block_type,
-                         'order_in_page', order_in_page,
-                         'attrs', attrs)
-from blocks
-where id=block_id;
+    select block_json
+    from get_json_for_blocks((select l from blocks_levels where id=block_id))
+    where id=block_id;
 $$ language sql;
 
 
-create or replace function add_block_at_end(block_type integer, attrs json)
+create or replace function add_block_at_end(block_type integer, block_parent integer, attrs json)
 returns json as
 $$
 DECLARE
-    new_order integer;
     to_ret json;
 BEGIN
-    select max(order_in_page) + 1000
-    into new_order
-    from blocks;
-
+    raise warning '% % %', block_type, block_parent, attrs;
     select json_build_object('id', t.id,
-                             'block_type', t.block_type,
-                             'order_in_page', t.order_in_page,
+                             'type', t.block_type,
+                             'order', t.order_in_page,
+                             'parent', t.parent,
                              'attrs', t.attrs)
     into to_ret
-    from insert_block(block_type, new_order, attrs) t;
+    from insert_block(block_type,
+                      block_parent,
+                      (select coalesce(max(order_in_page), 0) + 1000
+                       from blocks_parent
+                       where parent is not distinct from block_parent),
+                      attrs) t;
 
     return to_ret;
 END
 $$ language plpgsql;
+
 
 
 create or replace function add_block_before(before_id integer, block_type integer, attrs json)
@@ -54,11 +52,15 @@ BEGIN
     into new_block_order, can_insert_block
     from (select order_in_page elem_order,
                  (select coalesce(max(order_in_page), 0)
-                  from blocks
+                  from blocks_parent
                   where order_in_page < (select order_in_page
-                                         from blocks
-                                         where id=before_id)) max_smaller_order
-          from blocks
+                                         from blocks_parent
+                                         where id=before_id)
+                    and parent is not distinct from (select parent
+                                                     from blocks_parent
+                                                     where id=before_id)
+                  ) max_smaller_order
+          from blocks_parent
           where id=before_id) t;
 
     if can_insert_block then
@@ -66,7 +68,7 @@ BEGIN
         -- insert the block and get the new id
         select id
         into new_block_id
-        from insert_block(block_type, new_block_order, attrs);
+        from insert_block(block_type, (select parent from blocks_parent where id=before_id), new_block_order, attrs);
 
         -- jsonize the block and return it
         return get_block(new_block_id);
@@ -77,7 +79,8 @@ BEGIN
         set order_in_page=no.new_order
         from (select id,
                      row_number() over(order by order_in_page) * 1000 new_order
-              from blocks) no
+              from blocks
+              where parent is not distinct from block_parent) no
         where bp.id=no.id;
 
         return add_block_before(block_type, attrs);
@@ -98,13 +101,14 @@ BEGIN
     select next_id
     into next_block_id
     from (select id, lead(id, 1, NULL) over(order by order_in_page) next_id
-          from blocks) t
+          from blocks_parent
+          where parent is not distinct from (select parent from blocks_parent where id=after_id)) t
     where id=after_id;
 
-    raise notice 'next_block_id %', next_block_id;
-
     if next_block_id is NULL then
-        return add_block_at_end(block_type, attrs);
+        return add_block_at_end(block_type,
+                                (select parent from blocks_parent where id=after_id),
+                                attrs);
     else
         return add_block_before(next_block_id, block_type, attrs);
     end if;

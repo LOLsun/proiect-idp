@@ -13,6 +13,7 @@ def get_db_conn():
 
 
 # TODO remove from __all__
+# TODO try except finally with commit and rollback properly
 def _call_json_returning_proc(procname, *args):
     result = None
     conn = get_db_conn()
@@ -26,6 +27,17 @@ def _call_json_returning_proc(procname, *args):
     return result
 
 
+# TODO remove from __all__
+# TODO try except finally with commit and rollback properly
+def _call_void_proc(procname, *args):
+    result = None
+    conn = get_db_conn()
+
+    with conn.cursor() as cur:
+        cur.callproc(procname, args)
+    conn.commit()
+
+
 def get_all_blocks():
     return _call_json_returning_proc('get_all_blocks')
 
@@ -34,8 +46,8 @@ def get_block_by_id(block_id):
     return _call_json_returning_proc('get_block', block_id)
 
 
-def add_block_at_end(block_type, attrs):
-    return _call_json_returning_proc('add_block_at_end', block_type, attrs)
+def add_block_at_end(block_type, parent, attrs):
+    return _call_json_returning_proc('add_block_at_end', block_type, parent, attrs)
 
 
 def add_block_before(before_id, block_type, attrs):
@@ -44,3 +56,11 @@ def add_block_before(before_id, block_type, attrs):
 
 def add_block_after(after_id, block_type, attrs):
     return _call_json_returning_proc('add_block_after', after_id, block_type, attrs)
+
+
+def delete_block(block_id):
+    _call_void_proc('delete_block', block_id)
+
+
+def delete_block_children(block_id):
+    _call_void_proc('delete_children', block_id)

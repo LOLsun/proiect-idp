@@ -40,6 +40,45 @@ read -r -d '' TEST3_POST_DATA << END_OF_JSON
 }
 END_OF_JSON
 
+read -r -d '' TEST4_POST_DATA << END_OF_JSON
+{
+    "block": {
+        "block_type": 1,
+        "attrs": {
+            "content": "child of 4"
+        }
+    },
+    "parent": 4
+}
+END_OF_JSON
+
+read -r -d '' TEST5_POST_DATA << END_OF_JSON
+{
+    "block": {
+        "block_type": 2,
+        "attrs": {
+            "content": "todo before 11",
+            "done": true
+        }
+    },
+    "add_before": 11
+}
+END_OF_JSON
+
+read -r -d '' TEST6_POST_DATA << END_OF_JSON
+{
+    "block": {
+        "block_type": 2,
+        "attrs": {
+            "content": "todo after 12",
+            "done": true
+        }
+    },
+    "add_after": 12
+}
+END_OF_JSON
+
+
 # Functions
 
 add_block() {
@@ -62,3 +101,12 @@ add_block "$TEST2_POST_DATA"
 
 echo "Test 3: adding a block after another block"
 add_block "$TEST3_POST_DATA"
+
+echo "Test 4: adding a block as a child of another block"
+add_block "$TEST4_POST_DATA"
+
+echo "Test 5: adding a block before another child block"
+add_block "$TEST5_POST_DATA"
+
+echo "Test 6: adding a block after another child block"
+add_block "$TEST6_POST_DATA"
