@@ -38,14 +38,13 @@ END
 $$ language plpgsql;
 
 
-
-create or replace function add_block_before(before_id integer, block_type integer, attrs json)
-returns json as
+-- TODO error checking and stuff
+create or replace function get_position_before(before_id integer)
+returns integer as
 $$
 DECLARE
     new_block_order integer;
     can_insert_block boolean;
-    new_block_id integer;
 BEGIN
     select (elem_order + max_smaller_order) / 2 new_order,
            ((elem_order + max_smaller_order) / 2) <> max_smaller_order can_insert
@@ -64,26 +63,47 @@ BEGIN
           where id=before_id) t;
 
     if can_insert_block then
-        raise notice 'can insert block at %', new_block_order;
-        -- insert the block and get the new id
-        select id
-        into new_block_id
-        from insert_block(block_type, (select parent from blocks_parent where id=before_id), new_block_order, attrs);
+        return new_block_order;
+    end if;
 
-        -- jsonize the block and return it
-        return get_block(new_block_id);
+    return NULL;
+END
+$$ language plpgsql;
+
+
+-- TODO docstring
+create or replace function space_out_siblings(block_id integer) returns void as
+$$
+    update blocks_parent bp
+    set order_in_page=no.new_order
+    from (select id,
+                 row_number() over(order by order_in_page) * 1000 new_order
+          from blocks_parent
+          where parent is not distinct from (select parent from blocks_parent where id=block_id)) no
+    where bp.id=no.id;
+$$ language sql;
+
+
+create or replace function add_block_before(before_id integer, block_type integer, attrs json)
+returns json as
+$$
+DECLARE
+    new_block_order integer;
+BEGIN
+    new_block_order := get_position_before(before_id);
+
+    if new_block_order is not NULL then
+        return get_block((select id from insert_block(
+            block_type,
+            (select parent from blocks_parent where id=before_id),
+            new_block_order,
+            attrs
+        )));
     else
-        raise notice 'resizing...';
-        -- update orders_in_page so that the blocks spaced out by 1000
-        update blocks_parent bp
-        set order_in_page=no.new_order
-        from (select id,
-                     row_number() over(order by order_in_page) * 1000 new_order
-              from blocks
-              where parent is not distinct from block_parent) no
-        where bp.id=no.id;
+        -- update orders_in_page so that the blocks are spaced out by 1000
+        perform space_out_siblings(before_id);
 
-        return add_block_before(block_type, attrs);
+        return add_block_before(before_id, block_type, attrs);
     end if;
 
     -- TODO error handling?

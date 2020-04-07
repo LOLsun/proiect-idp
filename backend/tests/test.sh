@@ -93,20 +93,20 @@ add_block() {
 
 # Tests
 
-#echo "Test 1: adding a block without specifying a position"
-#add_block "$TEST1_POST_DATA"
-#
-#echo "Test 2: adding a block before another block"
-#add_block "$TEST2_POST_DATA"
-#
-#echo "Test 3: adding a block after another block"
-#add_block "$TEST3_POST_DATA"
-#
-#echo "Test 4: adding a block as a child of another block"
-#add_block "$TEST4_POST_DATA"
-#
-#echo "Test 5: adding a block before another child block"
-#after "$TEST5_POST_DATA"
-#
-#echo "Test 6: adding a block after another child block"
+echo "Test 1: adding a block without specifying a position"
+add_block "$TEST1_POST_DATA"
+
+echo "Test 2: adding a block before another block"
+add_block "$TEST2_POST_DATA"
+
+echo "Test 3: adding a block after another block"
+add_block "$TEST3_POST_DATA"
+
+echo "Test 4: adding a block as a child of another block"
+add_block "$TEST4_POST_DATA"
+
+echo "Test 5: adding a block before another child block"
+add_block "$TEST5_POST_DATA"
+
+echo "Test 6: adding a block after another child block"
 add_block "$TEST6_POST_DATA"
