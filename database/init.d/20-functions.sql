@@ -84,6 +84,7 @@ $$
 $$ language sql;
 
 
+-- TODO treat errors (like non-existent before_id)
 create or replace function add_block_before(before_id integer, block_type integer, attrs json)
 returns json as
 $$
@@ -101,6 +102,7 @@ BEGIN
         )));
     else
         -- update orders_in_page so that the blocks are spaced out by 1000
+        -- TODO this may fail in which case we'll enter an infinite recursion
         perform space_out_siblings(before_id);
 
         return add_block_before(before_id, block_type, attrs);
@@ -131,6 +133,87 @@ BEGIN
                                 attrs);
     else
         return add_block_before(next_block_id, block_type, attrs);
+    end if;
+END
+$$ language plpgsql;
+
+
+create or replace function move_block_as_child(block_id integer, new_parent_id integer)
+returns json as
+$$
+BEGIN
+    update block_parent
+    set parent=new_parent_id
+    where id=block_id;
+
+    return get_block(block_id);
+END
+$$ language plpgsql;
+
+
+create or replace function move_block_before(block_id integer, before_id integer)
+returns json as
+$$
+DECLARE
+    new_block_order integer;
+BEGIN
+    new_block_order := get_position_before(before_id);
+
+    if new_block_order is not NULL then
+        update blocks_parent
+        set parent=(select parent from blocks_parent where id=before_id),
+            order_in_page=new_block_order
+        where id=block_id;
+
+        return get_block(block_id);
+    else
+        -- update orders_in_page so that the blocks are spaced out by 1000
+        -- TODO this may fail in which case we'll enter an infinite recursion
+        perform space_out_siblings(before_id);
+
+        return move_block_before(block_id, before_id);
+    end if;
+
+    -- TODO error handling?
+    return '{}'::json;
+END
+$$ language plpgsql;
+
+
+create or replace function move_block_at_end(block_id integer, parent_id integer)
+returns json as
+$$
+BEGIN
+    update blocks_parent
+    set parent=parent_id,
+        order_in_page=(select coalesce(max(order_in_page), 0) + 1000
+                       from blocks_parent
+                       where parent=parent_id)
+    where id=block_id;
+
+    return get_block(block_id);
+END
+$$ language plpgsql;
+
+
+create or replace function move_block_after(block_id integer, after_id integer)
+returns json as
+$$
+DECLARE
+    next_block_id integer;
+BEGIN
+    select next_id
+    into next_block_id
+    from (select id, lead(id, 1, NULL) over(order by order_in_page) next_id
+          from blocks_parent
+          where parent is not distinct from (select parent from blocks_parent where id=after_id)) t
+    where id=after_id;
+
+    if next_block_id is NULL then
+        return move_block_at_end(block_id,
+                                 (select parent from blocks_parent where id=after_id));
+    else
+        return move_block_before(block_id, next_block_id);
     end if;
 END
 $$ language plpgsql;
