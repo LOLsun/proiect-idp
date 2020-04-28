@@ -1,5 +1,5 @@
 create table blocks_parent (
-    id serial not null,
+    id serial primary key,
     parent integer,  -- proper fk
     order_in_page integer
     -- TODO see if serial creates a pk as well
