@@ -64,3 +64,15 @@ def delete_block(block_id):
 
 def delete_block_children(block_id):
     _call_void_proc('delete_children', block_id)
+
+
+def move_block_after(from_id, to_id):
+    return _call_json_returning_proc('move_block_after', from_id, to_id)
+
+
+def move_block_at_end(from_id, parent_id):
+    return _call_json_returning_proc('move_block_at_end', from_id, parent_id)
+
+
+def update_block_attrs(block_id, attrs):
+    _call_void_proc('update_block_attrs', block_id, attrs)

@@ -19,7 +19,6 @@ $$
 DECLARE
     to_ret json;
 BEGIN
-    raise warning '% % %', block_type, block_parent, attrs;
     select json_build_object('id', t.id,
                              'type', t.block_type,
                              'order', t.order_in_page,
@@ -188,7 +187,7 @@ BEGIN
     set parent=parent_id,
         order_in_page=(select coalesce(max(order_in_page), 0) + 1000
                        from blocks_parent
-                       where parent=parent_id)
+                       where parent is not distinct from parent_id)
     where id=block_id;
 
     return get_block(block_id);

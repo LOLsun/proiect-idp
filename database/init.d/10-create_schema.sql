@@ -169,3 +169,29 @@ BEGIN
     end loop;
 END
 $$ language plpgsql;
+
+
+create or replace function update_block_attrs(block_id integer, attrs json) returns void as
+$$
+DECLARE
+    type int;
+BEGIN
+    select block_type
+    into type
+    from blocks_attrs
+    where id=block_id;
+
+    if type = 1 then
+        update paragraphs
+        set content=coalesce((attrs->>'content')::varchar, content)
+        where id=block_id;
+    end if;
+
+    if type = 2 then
+        update todos
+        set content=coalesce((attrs->>'content')::varchar, content),
+            done=coalesce((attrs->>'done')::boolean, done)
+        where id=block_id;
+    end if;
+END
+$$ language plpgsql;
