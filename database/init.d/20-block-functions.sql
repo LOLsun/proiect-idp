@@ -1,35 +1,55 @@
-create or replace function get_all_blocks() returns json as
+create or replace function get_all_blocks(page_id integer) returns json as
 $$
-    select json_agg(block_json order by (block_json->>'order')::integer)
-    from get_json_for_blocks(1);
-$$ language sql;
+DECLARE
+    to_ret json;
+BEGIN
+    select coalesce(json_agg(block_json order by (block_json->>'order')::integer), '[]'::json)
+    into to_ret
+    from get_json_for_blocks(1, page_id);
+
+    return to_ret;
+END
+$$ language plpgsql;
 
 
 create or replace function get_block(block_id integer) returns json as
 $$
+DECLARE
+    to_ret json;
+BEGIN
     select block_json
-    from get_json_for_blocks((select l from blocks_levels where id=block_id))
+    into to_ret
+    from get_json_for_blocks(
+            (select l from blocks_levels where id=block_id),
+            (select page_id from blocks_attrs where id=block_id)
+         )
     where id=block_id;
-$$ language sql;
+
+    return to_ret;
+END
+$$ language plpgsql;
 
 
-create or replace function add_block_at_end(block_type integer, block_parent integer, attrs json)
+create or replace function add_block_at_end(block_type integer, block_parent integer, attrs json, page integer)
 returns json as
 $$
 DECLARE
     to_ret json;
 BEGIN
     select json_build_object('id', t.id,
+                             'page', page,
                              'type', t.block_type,
                              'order', t.order_in_page,
                              'parent', t.parent,
                              'attrs', t.attrs)
     into to_ret
     from insert_block(block_type,
+                      page,
                       block_parent,
                       (select coalesce(max(order_in_page), 0) + 1000
                        from blocks_parent
-                       where parent is not distinct from block_parent),
+                       where parent is not distinct from block_parent
+                         and page_id=page),
                       attrs) t;
 
     return to_ret;
@@ -57,6 +77,7 @@ BEGIN
                     and parent is not distinct from (select parent
                                                      from blocks_parent
                                                      where id=before_id)
+                    and page_id=(select page_id from blocks_parent where id=before_id)
                   ) max_smaller_order
           from blocks_parent
           where id=before_id) t;
@@ -78,7 +99,8 @@ $$
     from (select id,
                  row_number() over(order by order_in_page) * 1000 new_order
           from blocks_parent
-          where parent is not distinct from (select parent from blocks_parent where id=block_id)) no
+          where parent is not distinct from (select parent from blocks_parent where id=block_id)
+            and page_id=(select page_id from blocks_parent where id=block_id)) no
     where bp.id=no.id;
 $$ language sql;
 
@@ -95,6 +117,7 @@ BEGIN
     if new_block_order is not NULL then
         return get_block((select id from insert_block(
             block_type,
+            (select page_id from blocks_parent where id=before_id),
             (select parent from blocks_parent where id=before_id),
             new_block_order,
             attrs
@@ -123,13 +146,15 @@ BEGIN
     into next_block_id
     from (select id, lead(id, 1, NULL) over(order by order_in_page) next_id
           from blocks_parent
-          where parent is not distinct from (select parent from blocks_parent where id=after_id)) t
+          where parent is not distinct from (select parent from blocks_parent where id=after_id)
+            and page_id=(select page_id from blocks_parent where id=after_id)) t
     where id=after_id;
 
     if next_block_id is NULL then
         return add_block_at_end(block_type,
                                 (select parent from blocks_parent where id=after_id),
-                                attrs);
+                                attrs,
+                                (select page_id from blocks_parent where id=after_id));
     else
         return add_block_before(next_block_id, block_type, attrs);
     end if;
@@ -205,7 +230,8 @@ BEGIN
     into next_block_id
     from (select id, lead(id, 1, NULL) over(order by order_in_page) next_id
           from blocks_parent
-          where parent is not distinct from (select parent from blocks_parent where id=after_id)) t
+          where parent is not distinct from (select parent from blocks_parent where id=after_id)
+            and page_id=(select page_id from blocks_parent where id=after_id)) t
     where id=after_id;
 
     if next_block_id is NULL then

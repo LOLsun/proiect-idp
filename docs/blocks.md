@@ -4,9 +4,6 @@
 
 Content block types:
 
- - [x] Paragraph
- - [x] Page
- - [x] TODO block
  - [x] Heading level 1
  - [x] Heading level 2
  - [x] Heading level 3
@@ -24,10 +21,6 @@ Content block types:
  - [x] File
  - [x] Math
  - [x] Table of Contents
-
-Layout block types:
-
- - [ ] TODO
 
 ## Block attributes
 
