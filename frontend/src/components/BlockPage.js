@@ -1,12 +1,12 @@
 import React from 'react';
-import { FaRegSquare, FaRegCheckSquare } from 'react-icons/fa'
-import EditableMarkdownContent from './EditableMarkdownContent'
+import EditableMarkdownContent from './EditableMarkdownContent';
+import { FaRegFileAlt } from 'react-icons/fa'
+import { Link } from 'react-router-dom';
 
-
-function BlockTodo({block, updateAttrs}) {
+function BlockPage({block, updateAttrs}) {
     return (
         <div
-            className="block-todo"
+            className="block-page"
             style={{
                 display: "flex",
                 flexDirection: "row",
@@ -15,18 +15,10 @@ function BlockTodo({block, updateAttrs}) {
                 width: "100%"
             }}
         >
-            <div
-                className="block-todo-check"
-                onClick={ev => {
-                    updateAttrs({done: !block.attrs.done})
-                }}
-            >
-                {block.attrs.done ? <FaRegCheckSquare size="20px"/> : <FaRegSquare size="20px"/>}
-            </div>
-
-            <div
-                className={`todo-block-content ${block.attrs.done && "todo-block-content-done"}`}
-            >
+            <Link to={`/page/${block.attrs.page_id}`}>
+                <FaRegFileAlt size="20px"/>
+            </Link>
+            <div className="page-block-content" >
                 <EditableMarkdownContent
                     text={block.attrs.content}
                     onTextChange={newText => {
@@ -42,4 +34,4 @@ function BlockTodo({block, updateAttrs}) {
     )
 }
 
-export default BlockTodo;
+export default BlockPage;

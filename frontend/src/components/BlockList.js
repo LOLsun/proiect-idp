@@ -5,7 +5,7 @@ import Block from './Block';
 const indent_size = 35
 
 
-function BlockList({ blocks, updateBlock, indent=false }) {
+function BlockList({ blocks, updateBlock, indent=false, addBlockAfter, deleteBlock, idxPath, moveBlockAfter, moveBlockAsChild, deleteChildren }) {
     return (
         <div
             className='block-list'
@@ -18,6 +18,12 @@ function BlockList({ blocks, updateBlock, indent=false }) {
                     updateBlock={(idxPath, new_attrs, editing) => {
                                     updateBlock([idx, ...idxPath], new_attrs, editing)
                                 }}
+                    addBlockAfter={(idxPath, block) => {addBlockAfter([idx, ...idxPath], block)}}
+                    deleteBlock={idxPath => {deleteBlock([idx, ...idxPath])}}
+                    moveBlockAfter={moveBlockAfter}
+                    moveBlockAsChild={moveBlockAsChild}
+                    deleteChildren={deleteChildren}
+                    idxPath={[...idxPath, idx]}
                 />
             )}
         </div>

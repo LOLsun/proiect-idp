@@ -1,46 +1,38 @@
 import React from 'react';
-import { useState } from 'react'
-import data from './MockData'
-import BlockList from './components/BlockList'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import Page from './components/Page';
+import Register from './components/Register';
+import Login from './components/Login';
+import Home from './components/Home';
 import './App.css'
 
 function App() {
-    const [ blocks, setBlocks ] = useState(data);
-
-    const generateNewBlocks = (idxPath, blocks_list, new_attrs, editing) => {
-        const [head, ...tail] = idxPath
-        return [
-            ...blocks_list.slice(0, head),
-            tail.length === 0 ?
-            {
-                ...blocks_list[head],
-                attrs: {
-                    ...blocks_list[head].attrs,
-                    ...new_attrs
-                },
-                editing: editing !== undefined ? editing : blocks_list[head].editing,
-            }
-            :
-            {
-                ...blocks_list[head],
-                children: generateNewBlocks(tail, blocks_list[head].children, new_attrs, editing)
-            },
-            ...blocks_list.slice(head+1)
-        ]
-    }
-
-    const updateBlock = (idxPath, new_attrs, editing) => {
-        setBlocks(generateNewBlocks(idxPath, blocks, new_attrs, editing));
-    }
-
     return (
         <div className="App">
-            <div className="main-container">
-                <BlockList
-                    blocks={blocks}
-                    updateBlock={updateBlock}
-                />
-            </div>
+            <Router>
+                <Switch>
+                    <Route exact path="/register">
+                        <Register />
+                    </Route>
+                    <Route exact path="/login">
+                        <Login />
+                    </Route>
+
+                    <Route
+                        exact path="/page/"
+                        component={Page}
+                    />
+
+                    <Route
+                        exact path="/page/:page"
+                        render={props => <Page page={props.match.params.page} {...props} />}
+                    />
+
+                    <Route path="/">
+                        <Home />
+                    </Route>
+                </Switch>
+            </Router>
         </div>
     );
 }
