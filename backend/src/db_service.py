@@ -173,7 +173,8 @@ def get_page(page_id, user_id):
 
     raise AuthorizationError
 
-def get_page(page_id, new_title, user_id):
+
+def set_page_title(page_id, new_title, user_id):
     is_authorized = _call_returning_proc('is_user_authorized_for_page',
                                          page_id, user_id)
 

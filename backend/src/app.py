@@ -184,5 +184,32 @@ def move_block_as_child(from_id, to_id):
         return {'error': 'unauthorized'}, 401
 
 
+@app.route('/pages/<int:page_id>', methods=['GET'])
+@jwt_required
+def get_page_details(page_id):
+    current_user = get_jwt_identity()
+    try:
+        return db_service.get_page(page_id, current_user['id'])
+    except db_service.AuthorizationError:
+        return {'error': 'unauthorized'}, 401
+
+
+@app.route('/pages/<int:page_id>/title', methods=['PUT'])
+@jwt_required
+def set_page_title(page_id):
+    current_user = get_jwt_identity()
+    if not request.is_json:
+        return {'msg': 'Missing JSON in request'}, 400
+
+    post_data = request.get_json()
+    if 'title' not in post_data:
+        return {'msg': 'Missing title in request'}, 400
+
+    try:
+        return db_service.set_page_title(page_id, post_data['title'], current_user['id'])
+    except db_service.AuthorizationError:
+        return {'error': 'unauthorized'}, 401
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
