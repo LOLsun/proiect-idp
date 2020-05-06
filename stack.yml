@@ -2,31 +2,36 @@ version: '3'
 
 services:
     database:
-      build: ./database
+      image: lolsun/idp:database
       restart: always
       environment:
         POSTGRES_HOST_AUTH_METHOD: trust
       ports:
         - 5432:5432
-      #volumes:
-      #- db-volume:/var/lib/postgres
+      volumes:
+        - db-volume:/var/lib/postgresql/data
     backend:
-      build: ./backend
+      image: lolsun/idp:backend
       restart: always
       ports:
         - 5000:5000
     frontend:
-      build: ./frontend
+      image: lolsun/idp:frontend
       restart: always
       ports:
         - 3000:3000
       stdin_open: true
+      tty: true
     prometheus:
-      build: ./prometheus
+      image: lolsun/idp:prometheus
+      ports:
+        - 9090:9090
+      stdin_open: true
+      tty: true
     grafana:
-      build: ./grafana
+      image: lolsun/idp:grafana
       ports:
         - 2000:3000
 
 volumes:
-  db-volume:
+  db-volume: {}
