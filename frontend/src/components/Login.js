@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
-const baseUrl = 'http://192.168.100.23:5000/'
+const baseUrl = '/api/'
 
 export default props => {
     const [ shouldRedirect, setShouldRedirect ] = useState(false)

@@ -10,7 +10,7 @@ import Backend from 'react-dnd-html5-backend';
 import Loader from 'react-loader-spinner';
 import axios from 'axios';
 
-const baseUrl = 'http://192.168.100.23:5000/'
+const baseUrl = '/api/'
 
 function Page({ page, location, match }) {
     const [ blocks, setBlocks ] = useState(null);

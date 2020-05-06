@@ -128,7 +128,7 @@ function Block({ block, updateBlock, addBlockAfter, deleteBlock, idxPath, moveBl
                                 <div 
                                     className="menu-item"
                                     onClick={ev => {
-                                        addBlockAfter([], {attrs: block.attrs, type: block.type, id: "conk"})
+                                        addBlockAfter([], {attrs: block.attrs, type: block.type})
                                     }}
                                 >
                                     duplicate

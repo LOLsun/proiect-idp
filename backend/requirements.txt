@@ -1,3 +1,4 @@
 flask
 psycopg2
 flask-jwt-extended
+prometheus_flask_exporter

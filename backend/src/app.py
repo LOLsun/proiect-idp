@@ -2,18 +2,22 @@ from flask import Flask
 from flask import request
 from json import dumps
 from sys import stderr
+from datetime import timedelta
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
+from prometheus_flask_exporter import PrometheusMetrics
 import db_service
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'super-secret'  # TODO load from env
 jwt = JWTManager(app)
+metrics = PrometheusMetrics(app)
+metrics.info('app_info', 'Application info', version='1.0.3')
 
 
-@app.route('/register', methods=['POST'])
+@app.route('/api/register', methods=['POST'])
 def register_user():
     if not request.is_json:
         return {'msg': 'Missing JSON in request'}, 400
@@ -37,7 +41,7 @@ def register_user():
     return {'msg': 'ok'}, 201
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login_user():
     if not request.is_json:
         return {'msg': 'Missing JSON in request'}, 400
@@ -55,10 +59,11 @@ def login_user():
     if 'error' in ident:
         return ident, 400
 
-    return {'token': create_access_token(identity=ident)}, 200
+    return {'token': create_access_token(identity=ident,
+                                         expires_delta=timedelta(days=1))}, 200
 
 
-@app.route('/defaultpage', methods=['GET'])
+@app.route('/api/defaultpage', methods=['GET'])
 @jwt_required
 def get_user_main_page():
     current_user = get_jwt_identity()
@@ -67,7 +72,7 @@ def get_user_main_page():
     return user_page
 
 
-@app.route('/pages/<int:page_id>/blocks', methods=['GET'])
+@app.route('/api/pages/<int:page_id>/blocks', methods=['GET'])
 @jwt_required
 def all_blocks(page_id):
     current_user = get_jwt_identity()
@@ -77,7 +82,7 @@ def all_blocks(page_id):
         return {'error': 'unauthorized'}, 401
 
 
-@app.route('/pages/<int:page_id>/blocks', methods=['POST'])
+@app.route('/api/pages/<int:page_id>/blocks', methods=['POST'])
 @jwt_required
 def new_block(page_id):
     current_user = get_jwt_identity()
@@ -117,7 +122,7 @@ def new_block(page_id):
     except db_service.AuthorizationError:
         return {'error': 'unauthorized'}, 401
 
-@app.route('/blocks/<int:block_id>', methods=['GET'])
+@app.route('/api/blocks/<int:block_id>', methods=['GET'])
 @jwt_required
 def get_block(block_id):
     current_user = get_jwt_identity()
@@ -127,7 +132,7 @@ def get_block(block_id):
         return {'error': 'unauthorized'}, 401
 
 
-@app.route('/blocks/<int:block_id>', methods=['PUT'])
+@app.route('/api/blocks/<int:block_id>', methods=['PUT'])
 @jwt_required
 def update_block(block_id):
     current_user = get_jwt_identity()
@@ -140,7 +145,7 @@ def update_block(block_id):
         return {'error': 'unauthorized'}, 401
 
 
-@app.route('/blocks/<int:block_id>', methods=['DELETE'])
+@app.route('/api/blocks/<int:block_id>', methods=['DELETE'])
 @jwt_required
 def delete_block(block_id):
     current_user = get_jwt_identity()
@@ -151,7 +156,7 @@ def delete_block(block_id):
         return {'error': 'unauthorized'}, 401
 
 
-@app.route('/blocks/<int:block_id>/children', methods=['DELETE'])
+@app.route('/api/blocks/<int:block_id>/children', methods=['DELETE'])
 @jwt_required
 def delete_block_children(block_id):
     current_user = get_jwt_identity()
@@ -162,7 +167,7 @@ def delete_block_children(block_id):
         return {'error': 'unauthorized'}, 401
 
 
-@app.route('/move/<int:from_id>/after/<int:to_id>', methods=['PUT'])
+@app.route('/api/move/<int:from_id>/after/<int:to_id>', methods=['PUT'])
 @jwt_required
 def move_block_after(from_id, to_id):
     current_user = get_jwt_identity()
@@ -173,7 +178,7 @@ def move_block_after(from_id, to_id):
         return {'error': 'unauthorized'}, 401
 
 
-@app.route('/move/<int:from_id>/as_child/<int:to_id>', methods=['PUT'])
+@app.route('/api/move/<int:from_id>/as_child/<int:to_id>', methods=['PUT'])
 @jwt_required
 def move_block_as_child(from_id, to_id):
     current_user = get_jwt_identity()
@@ -184,7 +189,7 @@ def move_block_as_child(from_id, to_id):
         return {'error': 'unauthorized'}, 401
 
 
-@app.route('/pages/<int:page_id>', methods=['GET'])
+@app.route('/api/pages/<int:page_id>', methods=['GET'])
 @jwt_required
 def get_page_details(page_id):
     current_user = get_jwt_identity()
@@ -194,7 +199,7 @@ def get_page_details(page_id):
         return {'error': 'unauthorized'}, 401
 
 
-@app.route('/pages/<int:page_id>/title', methods=['PUT'])
+@app.route('/api/pages/<int:page_id>/title', methods=['PUT'])
 @jwt_required
 def set_page_title(page_id):
     current_user = get_jwt_identity()
@@ -212,4 +217,4 @@ def set_page_title(page_id):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0')
