@@ -23,7 +23,6 @@ create table blocks_parent (
 
 create table paragraphs (
     content varchar not null
-
 ) inherits (blocks_parent);
 
 create table todos (
@@ -34,6 +33,36 @@ create table todos (
 
 create table page_blocks (
     ref_page_id integer not null -- TODO proper fk
+) inherits (blocks_parent);
+
+create table bullets (
+    content varchar not null
+) inherits (blocks_parent);
+
+create table numbereds (
+    content varchar not null
+) inherits (blocks_parent);
+
+create table headers1 (
+    content varchar not null
+) inherits (blocks_parent);
+
+create table headers2 (
+    content varchar not null
+) inherits (blocks_parent);
+
+create table headers3 (
+    content varchar not null
+) inherits (blocks_parent);
+
+create table dividers () inherits (blocks_parent);
+
+create table maths (
+    content varchar not null
+) inherits (blocks_parent);
+
+create table urls (
+    content varchar not null
 ) inherits (blocks_parent);
 
 
@@ -63,7 +92,71 @@ select id,
                          (select title from pages where id=ref_page_id),
                          'page_id',
                          ref_page_id) attrs
-from page_blocks;
+from page_blocks
+UNION ALL
+select id,
+       4 block_type,
+       parent,
+       order_in_page,
+       page_id,
+       json_build_object('content', content) attrs
+from bullets
+UNION ALL
+select id,
+       5 block_type,
+       parent,
+       order_in_page,
+       page_id,
+       json_build_object('content', content) attrs
+from numbereds
+UNION ALL
+select id,
+       6 block_type,
+       parent,
+       order_in_page,
+       page_id,
+       json_build_object('content', content) attrs
+from headers1
+UNION ALL
+select id,
+       7 block_type,
+       parent,
+       order_in_page,
+       page_id,
+       json_build_object('content', content) attrs
+from headers2
+UNION ALL
+select id,
+       8 block_type,
+       parent,
+       order_in_page,
+       page_id,
+       json_build_object('content', content) attrs
+from headers3
+UNION ALL
+select id,
+       9 block_type,
+       parent,
+       order_in_page,
+       page_id,
+       '{}'::json attrs
+from dividers
+UNION ALL
+select id,
+       10 block_type,
+       parent,
+       order_in_page,
+       page_id,
+       json_build_object('content', content) attrs
+from maths
+UNION ALL
+select id,
+       11 block_type,
+       parent,
+       order_in_page,
+       page_id,
+       json_build_object('content', content) attrs
+from urls;
 
 
 create view blocks_levels as
@@ -176,6 +269,61 @@ BEGIN
         returning id into new_id;
     end if;
 
+    if block_type = 4 then
+        insert into bullets (page_id, parent, order_in_page, content)
+               values (page, parent, order_in_page,
+                       (attrs->>'content')::varchar)
+        returning id into new_id;
+    end if;
+
+    if block_type = 5 then
+        insert into numbereds (page_id, parent, order_in_page, content)
+               values (page, parent, order_in_page,
+                       (attrs->>'content')::varchar)
+        returning id into new_id;
+    end if;
+
+    if block_type = 6 then
+        insert into headers1 (page_id, parent, order_in_page, content)
+               values (page, parent, order_in_page,
+                       (attrs->>'content')::varchar)
+        returning id into new_id;
+    end if;
+
+    if block_type = 7 then
+        insert into headers2 (page_id, parent, order_in_page, content)
+               values (page, parent, order_in_page,
+                       (attrs->>'content')::varchar)
+        returning id into new_id;
+    end if;
+
+    if block_type = 8 then
+        insert into headers3 (page_id, parent, order_in_page, content)
+               values (page, parent, order_in_page,
+                       (attrs->>'content')::varchar)
+        returning id into new_id;
+    end if;
+
+    if block_type = 9 then
+        insert into dividers (page_id, parent, order_in_page)
+               values (page, parent, order_in_page)
+        returning id into new_id;
+    end if;
+
+    if block_type = 10 then
+        insert into maths (page_id, parent, order_in_page, content)
+               values (page, parent, order_in_page,
+                       (attrs->>'content')::varchar)
+        returning id into new_id;
+    end if;
+
+    if block_type = 11 then
+        insert into urls (page_id, parent, order_in_page, content)
+               values (page, parent, order_in_page,
+                       (attrs->>'content')::varchar)
+        returning id into new_id;
+    end if;
+
     select *
     into ret
     from blocks_attrs
@@ -273,6 +421,48 @@ BEGIN
         update pages
         set title=coalesce((attrs->>'content')::varchar, title)
         where id=(select ref_page_id from page_blocks where id=block_id);
+    end if;
+
+    if type = 4 then
+        update bullets
+        set content=coalesce((attrs->>'content')::varchar, content)
+        where id=block_id;
+    end if;
+
+    if type = 5 then
+        update numbereds
+        set content=coalesce((attrs->>'content')::varchar, content)
+        where id=block_id;
+    end if;
+
+    if type = 6 then
+        update headers1
+        set content=coalesce((attrs->>'content')::varchar, content)
+        where id=block_id;
+    end if;
+
+    if type = 7 then
+        update headers2
+        set content=coalesce((attrs->>'content')::varchar, content)
+        where id=block_id;
+    end if;
+
+    if type = 8 then
+        update headers2
+        set content=coalesce((attrs->>'content')::varchar, content)
+        where id=block_id;
+    end if;
+
+    if type = 10 then
+        update maths
+        set content=coalesce((attrs->>'content')::varchar, content)
+        where id=block_id;
+    end if;
+
+    if type = 11 then
+        update urls
+        set content=coalesce((attrs->>'content')::varchar, content)
+        where id=block_id;
     end if;
 END
 $$ language plpgsql;
