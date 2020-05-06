@@ -4,8 +4,6 @@ p {
 }
 
 .main-container {
-    display: block;
-    flex-direction: column;
     margin-left: auto;
     margin-right: auto;
     margin-top: 30px;
@@ -34,11 +32,11 @@ p {
 }
 
 .markdown-content code {
-    background-color: #CCC;
+    background-color: #EEE;
     font-family: 'Fira Code', monospace;
-    padding: 2px;
-    border-radius: 2px;
-    color: red;
+    padding: 1px 8px;
+    border-radius: 8px;
+    color: #1d4cdb;
 }
 
 .block-controls-content {
@@ -95,6 +93,73 @@ p {
     width: 100%;
     color: #000;
     opacity: 1;
+}
+
+.bullet-block-content {
+    padding-left: 16px;
+    width: 100%;
+    color: #000;
+    opacity: 1;
+}
+
+.numbered-block-content {
+    padding-left: 16px;
+    width: 100%;
+    color: #000;
+    opacity: 1;
+}
+
+.header1-block-content {
+    width: 100%;
+    color: #000;
+    opacity: 1;
+}
+
+.header1-block-content p {
+    font-size: 45px;
+}
+
+.header2-block-content {
+    width: 100%;
+    color: #000;
+    opacity: 1;
+}
+
+.header2-block-content p {
+    font-size: 38px;
+}
+
+.header3-block-content {
+    width: 100%;
+    color: #000;
+    opacity: 1;
+}
+
+.header3-block-content p {
+    font-size: 30px;
+}
+
+.divider-block-content {
+    width: 100%;
+}
+
+.math-block-content {
+    font-size: 22px;
+    width: 100%;
+}
+
+.url-block-content {
+    font-size: 22px;
+    width: 100%;
+}
+
+.url-block-to-edit {
+    margin-bottom: 15px;
+}
+
+.url-block-error > p {
+    color: #cb1a35;
+    font-family: 'Fira Code', monospace;
 }
 
 .page-block-content {
@@ -232,10 +297,163 @@ p {
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
     width: 100%;
-    margin-bottom: 50px;
+    margin-bottom: 75px;
+    margin-top: 60px;
 }
 
 .page-header-content, .page-header-content > p {
     font-size: 50px;
 }
+
+.navbar > ul {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    height: 60px;
+    background: rgb(11,58,110);
+    background: linear-gradient(90deg, rgba(11,58,110,1) 0%, #2a5380 100%);
+    padding: 0 30px;
+}
+
+.navbar li {
+    font-size: 20px;
+    padding: 10px 20px;
+}
+
+.navbar li a {
+    color: #e6ebed;
+    text-decoration: none;
+    font-family: 'Nunito', sans-serif;
+}
+
+.navbar li a:hover {
+    color: #cbd2d4;
+}
+
+.navbar li a:active {
+    color: #cbd2d4;
+}
+
+.home {
+    margin: 0 auto;
+    width: 600px;
+    margin-top: 100px;
+}
+
+.home h1 {
+    font-size: 50px;
+    font-family: 'Nunito', sans-serif;
+}
+
+.home-brand {
+    color: #c21c35;
+}
+
+.home-buttons {
+    margin-top: 100px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.home-buttons a {
+    padding: 15px 20px;
+    margin: 0px 10px;
+    width: 150px;
+    font-size: 20px;
+    font-family: 'Nunito', sans-serif;
+    border-radius: 5px;
+}
+
+.home-buttons .home-login {
+    background-color: #28577e;
+    color: #cbd2d4;
+    text-decoration: none;
+}
+
+.home-buttons .home-register {
+    border: 3px solid #28577e;
+    color: #28577e;
+    text-decoration: none;
+}
+
+.register {
+    margin: 0 auto;
+    width: 600px;
+    margin-top: 100px;
+}
+
+.login {
+    margin: 0 auto;
+    width: 600px;
+    margin-top: 100px;
+}
+
+.form-title {
+    font-size: 40px;
+    font-family: 'Nunito', sans-serif;
+    margin-bottom: 60px;
+}
+
+.register form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-item {
+    width: 300px;
+    margin-bottom: 20px;
+}
+
+.form-item label {
+    font-size: 20px;
+    font-family: 'Nunito', sans-serif;
+}
+
+.form-item input {
+    width: 100%;
+    font-size: 20px;
+    margin-top: 5px;
+    border: none;
+    border-bottom: 1px solid black;
+    font-family: 'Nunito', sans-serif;
+}
+
+.form-item .form-error {
+    font-size: 16px;
+    font-family: 'Nunito', sans-serif;
+    color: #cb1a35;
+    margin-top: 5px;
+}
+
+.form-submit {
+    background: none;
+    font-size: 20px;
+    font-family: 'Nunito', sans-serif;
+    border: 3px solid #28577e;
+    color: #28577e;
+    padding: 10px 20px;
+    width: 180px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-top: 40px;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+

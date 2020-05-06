@@ -5,9 +5,6 @@ import BlockTypes from './BlockTypes';
 
 const textToBlock = text => {
     if (text.startsWith('[] ')) {
-        // it's a To-Do block
-
-        // remove the trailing '[] ' and strip spaces
         text = text.slice('[] '.length).replace(/^\s+|\s+$/g, '');
         return {
             type: BlockTypes.TODO,
@@ -19,9 +16,6 @@ const textToBlock = text => {
     }
 
     if (text.startsWith('/page ')) {
-        // it's a page block
-        //
-        // remove the trailing '/page ' and strip spaces
         text = text.slice('/page '.length).replace(/^\s+|\s+$/g, '');
         return {
             type: BlockTypes.PAGE,
@@ -31,8 +25,86 @@ const textToBlock = text => {
         }
     }
 
+    if (text.startsWith('- ')) {
+        text = text.slice('- '.length).replace(/^\s+|\s+$/g, '');
+        return {
+            type: BlockTypes.BULLET,
+            attrs: {
+                content: text,
+            }
+        }
+    }
+
+    if (text.match(/^[1-9][0-9]*\. .+$/)) {
+        text = text.replace(/^[1-9][0-9]*\.\s*/, '')
+        return {
+            type: BlockTypes.NUMBERED,
+            attrs: {
+                content: text
+            }
+        }
+    }
+
+    if (text.startsWith('# ')) {
+        text = text.slice('# '.length).replace(/^\s+|\s+$/g, '');
+        return {
+            type: BlockTypes.HEADER1,
+            attrs: {
+                content: text,
+            }
+        }
+    }
+
+    if (text.startsWith('## ')) {
+        text = text.slice('## '.length).replace(/^\s+|\s+$/g, '');
+        return {
+            type: BlockTypes.HEADER2,
+            attrs: {
+                content: text,
+            }
+        }
+    }
+
+    if (text.startsWith('### ')) {
+        text = text.slice('### '.length).replace(/^\s+|\s+$/g, '');
+        return {
+            type: BlockTypes.HEADER3,
+            attrs: {
+                content: text,
+            }
+        }
+    }
+
+    if (text.replace(/^\s+|\s+$/g, '') === '---') {
+        return {
+            type: BlockTypes.DIVIDER,
+            attrs: {
+                content: text,
+            }
+        }
+    }
+
+    if (text.startsWith('/math ')) {
+        text = text.slice('/math '.length).replace(/^\s+|\s+$/g, '');
+        return {
+            type: BlockTypes.MATH,
+            attrs: {
+                content: text,
+            }
+        }
+    }
+
+    if (text.startsWith('/url ')) {
+        text = text.slice('/url '.length).replace(/^\s+|\s+$/g, '');
+        return {
+            type: BlockTypes.URL,
+            attrs: {
+                content: text,
+            }
+        }
+    }
+
     return {
-        id: 'bepis',
         type: BlockTypes.PARAGRAPH,
         attrs: {
             content: text

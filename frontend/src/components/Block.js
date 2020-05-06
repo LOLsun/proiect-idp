@@ -3,14 +3,27 @@ import { useState, useRef } from 'react';
 import BlockTodo from './BlockTodo';
 import BlockParagraph from './BlockParagraph';
 import BlockPage from './BlockPage';
+import BlockBullet from './BlockBullet';
+import BlockNumbered from './BlockNumbered';
+import BlockHeader1 from './BlockHeader1';
+import BlockHeader2 from './BlockHeader2';
+import BlockHeader3 from './BlockHeader3';
+import BlockDivider from './BlockDivider';
+import BlockMath from './BlockMath';
+import BlockUrl from './BlockUrl';
 import BlockList from './BlockList';
 import { FaPlus, FaGripVertical } from 'react-icons/fa';
 import NewBlock from './NewBlock';
 import { useDrag, useDrop } from 'react-dnd';
 
-const blocktype_to_component = [null, BlockParagraph, BlockTodo, BlockPage];
+const blocktype_to_component = [
+    null, BlockParagraph, BlockTodo, BlockPage,
+    BlockBullet, BlockNumbered, BlockHeader1,
+    BlockHeader2, BlockHeader3, BlockDivider,
+    BlockMath, BlockUrl
+];
 
-function Block({ block, updateBlock, addBlockAfter, deleteBlock, idxPath, moveBlockAfter, moveBlockAsChild, deleteChildren }) {
+function Block({ block, updateBlock, addBlockAfter, deleteBlock, idxPath, moveBlockAfter, moveBlockAsChild, deleteChildren, block_idx }) {
     const hasChildren = block.children !== undefined && block.children.length !== 0
     const [ isHovered, setIsHovered ] = useState(false);
     const [ isMenuVisible, setIsMenuVisible ] = useState(false);
@@ -136,6 +149,7 @@ function Block({ block, updateBlock, addBlockAfter, deleteBlock, idxPath, moveBl
                         {blocktype_to_component[block.type]({
                             block,
                             updateAttrs: (new_attrs, editing) => {updateBlock([], new_attrs, editing)},
+                            block_idx,
                         })}
                     </div>
                 </div>

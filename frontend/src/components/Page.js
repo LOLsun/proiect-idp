@@ -5,6 +5,7 @@ import BlockList from './BlockList';
 import NewBlock from './NewBlock';
 import EditableMarkdownContent from './EditableMarkdownContent';
 import { DndProvider } from 'react-dnd';
+import { FaLevelUpAlt } from 'react-icons/fa'
 import Backend from 'react-dnd-html5-backend';
 import Loader from 'react-loader-spinner';
 import axios from 'axios';
@@ -420,13 +421,26 @@ function Page({ page, location, match }) {
     }
 
     return (
-        <div className="main-container">
+        <div className="page">
             {redirect.should ?
                 <Redirect push={redirect.to !== location.pathname} to={redirect.to} />
                 :
                 <>
                     {pageDetails !== null &&
                     <div className="page-header">
+                        {pageDetails.parent !== null &&
+                        <FaLevelUpAlt
+                            onClick={() => {
+                                console.log(pageDetails)
+                                setRedirect({should: true, to: `/page/${pageDetails.parent}`})
+                            }}
+                            style={{
+                                fontSize: "30px",
+                                marginRight: "20px",
+                                cursor: "pointer",
+                            }}
+                        />
+                        }
                         <EditableMarkdownContent 
                             text={pageDetails.title}
                             onTextChange={text => {
@@ -443,7 +457,9 @@ function Page({ page, location, match }) {
                     }
 
                     {blocks === null ?
-                        <Loader type="Bars" color="#00BFFF" height={80} width={80} />
+                        <div className="center">
+                            <Loader type="Bars" color="#00BFFF" height={80} width={80} />
+                        </div>
                         :
                         <>
                             <DndProvider backend={Backend}>
@@ -458,7 +474,6 @@ function Page({ page, location, match }) {
                                     idxPath={[]}
                                 />
                             </DndProvider>
-
                         </>
                     }
                     <NewBlock onDone={onDone} onCancel={onCancel} className="page-new-block"/>

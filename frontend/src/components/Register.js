@@ -40,21 +40,38 @@ export default props => {
                 <Redirect push to="/login" />
                 :
                 <div>
-                    <h1>Create a new account</h1>
+                    <h1 className="form-title">
+                        <center>
+                            Create a new account
+                        </center>
+                    </h1>
+
                     <form onSubmit={formik.handleSubmit}>
-                        <label htmlFor="email">Email Address</label>
-                        <input name="email" {...formik.getFieldProps('email')} />
-                        {formik.touched.email && formik.errors.email && <div>{formik.errors.email}</div>}
+                        <div className="form-item">
+                            <label htmlFor="email">Email Address:</label> <br />
+                            <input name="email" {...formik.getFieldProps('email')} />
+                            {formik.touched.email && formik.errors.email &&
+                                <div className="form-error">{formik.errors.email}</div>
+                            }
+                        </div>
 
-                        <label htmlFor="name">Name:</label>
-                        <input name="name" {...formik.getFieldProps('name')} />
-                        {formik.touched.name && formik.errors.name && <div>{formik.errors.name}</div>}
+                        <div className="form-item">
+                            <label htmlFor="name">Name:</label> <br />
+                            <input name="name" {...formik.getFieldProps('name')} />
+                            {formik.touched.name && formik.errors.name &&
+                                <div className="form-error">{formik.errors.name}</div>
+                            }
+                        </div>
 
-                        <label htmlFor="password">Password:</label>
-                        <input name="password" {...formik.getFieldProps('password')} type="password" />
-                        {formik.touched.password && formik.errors.password && <div>{formik.errors.password}</div>}
+                        <div className="form-item">
+                            <label htmlFor="password">Password:</label> <br />
+                            <input name="password" {...formik.getFieldProps('password')} type="password" />
+                            {formik.touched.password && formik.errors.password &&
+                                <div className="form-error">{formik.errors.password}</div>
+                            }
+                        </div>
 
-                        <button type="submit">Register</button>
+                        <button type="submit" className="form-submit">Register</button>
                     </form>
                 </div>
             }

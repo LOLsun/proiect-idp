@@ -1,11 +1,15 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import MarkdownContent from './MarkdownContent';
 
 
 function EditableMarkdownContent({ text, onTextChange, isEditing, setEditing, style, className }) {
     const [ newContent, setNewContent ] = useState(text)
+
+    useEffect(() => {
+        setNewContent(text)
+    }, [text])
 
     return (
         <div style={style}>
